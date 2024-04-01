@@ -107,6 +107,7 @@ def place_methods(place_id=None):
     else:
         abort(501)
 
+
 @app_views.route('/places_search', methods=['POST'], strict_slashes=False)
 def places_search():
     """Retrieves all Place objects based on the search criteria."""
@@ -126,18 +127,20 @@ def places_search():
             state = storage.get(State, state_id)
             if state:
                 for city in state.cities:
-                    filtered_places.extend([place for place in city.places if place not in filtered_places])
+                    filtered_places.extend([place for place in city.places
+                                            if place not in filtered_places])
 
     if 'cities' in search_criteria and search_criteria['cities']:
         city_ids = search_criteria['cities']
         for city_id in city_ids:
             city = storage.get(City, city_id)
             if city:
-                filtered_places.extend([place for place in city.places if place not in filtered_places])
+                filtered_places.extend([place for place in city.places
+                                        if place not in filtered_places])
 
-  
     if 'amenities' in search_criteria and search_criteria['amenities']:
         amenity_ids = search_criteria['amenities']
-        filtered_places = [place for place in filtered_places if all(amenity in place.amenities for amenity in amenity_ids)]
+        filtered_places = [place for place in filtered_places
+                           if all(amenity in place.amenities for amenity in amenity_ids)]
 
     return jsonify([place.to_dict() for place in filtered_places])
