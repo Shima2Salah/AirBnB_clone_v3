@@ -141,6 +141,7 @@ def places_search():
     if 'amenities' in search_criteria and search_criteria['amenities']:
         amenity_ids = search_criteria['amenities']
         filtered_places = [place for place in filtered_places
-                           if all(amenity in place.amenities for amenity in amenity_ids)]
+                           if all(amenity in place.amenities
+                                  for amenity in amenity_ids)]
 
     return jsonify([place.to_dict() for place in filtered_places])
