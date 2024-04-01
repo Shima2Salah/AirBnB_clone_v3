@@ -14,7 +14,6 @@ from models.place import Place
 def places_by_city_requests(city_id):
     """Perform API requests of places by city
     """
-    # GET REQUESTS
     if request.method == 'GET':
         cities = storage.all(City)
         try:
@@ -25,7 +24,6 @@ def places_by_city_requests(city_id):
         except KeyError:
             abort(404)
 
-    # POST REQUESTS
     elif request.method == 'POST':
         cities = storage.all(City)
         if ('City.' + city_id) not in cities.keys():
@@ -51,12 +49,12 @@ def places_by_city_requests(city_id):
         storage.save()
         return jsonify(new_place.to_dict()), 201
 
-    # UNSUPPORTED REQUESTS
     else:
         abort(501)
 
 
-@app_views.route('/places/<place_id>', methods=['GET', 'DELETE', 'PUT'], strict_slashes=False)
+@app_views.route('/places/<place_id>', methods=['GET', 'DELETE', 'PUT'],
+                 strict_slashes=False)
 def place_methods(place_id=None):
     """Perform API requests of on place objects
     """
@@ -81,7 +79,6 @@ def place_methods(place_id=None):
         except KeyError:
             abort(404)
 
-    # PUT REQUESTS
     elif request.method == 'PUT':
         places = storage.all(Place)
         key = 'Place.' + place_id
@@ -104,7 +101,5 @@ def place_methods(place_id=None):
         except KeyError:
             abort(404)
 
-    # UNSUPPORTED REQUESTS
     else:
         abort(501)
-
