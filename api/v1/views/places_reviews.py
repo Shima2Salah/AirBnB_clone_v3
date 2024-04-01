@@ -17,7 +17,6 @@ def review_methods(place_id):
     reviews = storage.all(Review)
     places = storage.all(Place)
 
-    # GET REQUESTS
     if request.method == "GET":
         place_key = "Place." + place_id
         try:
@@ -27,7 +26,6 @@ def review_methods(place_id):
         except KeyError:
             abort(404)
 
-    # POST REQUESTS
     elif request.method == "POST":
         if request.is_json:
             body_request = request.get_json()
@@ -52,7 +50,6 @@ def review_methods(place_id):
             storage.save()
             return jsonify(new_review.to_dict()), 201
 
-    # UNSUPPORTED REQUESTS
     else:
         abort(501)
 
@@ -63,7 +60,6 @@ def reviews_id_mothods(review_id):
     """Review object methods"""
     reviews = storage.all(Review)
 
-    # GET REQUESTS
     if request.method == "GET":
         if not review_id:
             return jsonify([obj.to_dict() for obj in reviews.values()])
@@ -73,17 +69,15 @@ def reviews_id_mothods(review_id):
         except KeyError:
             abort(404)
 
-    # DELETE REQUESTS
     elif request.method == "DELETE":
         try:
             key = "Review." + review_id
             storage.delete(reviews[key])
             storage.save()
             return jsonify({}), 200
-        except:
+        except KeyError:
             abort(404)
 
-    # PUT REQUESTS
     elif request.method == "PUT":
         review_key = "Review." + review_id
         try:
@@ -101,7 +95,5 @@ def reviews_id_mothods(review_id):
             storage.save()
             return review.to_dict(), 200
 
-    # UNSUPPORTED REQUESTS
     else:
         abort(501)
-
