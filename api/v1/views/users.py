@@ -25,7 +25,7 @@ def users_method(user_id=None):
         try:
             return jsonify(users[key].to_dict())
         except KeyError:
-            abort(404) # if User of user_id does not exist
+            abort(404)
 
     elif request.method == 'DELETE':
         try:
