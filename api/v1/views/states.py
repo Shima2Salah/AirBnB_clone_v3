@@ -8,6 +8,7 @@ from flask import jsonify, abort, request
 from models import storage
 from models.state import State
 
+
 @app_views.route('/states', methods=['GET', 'POST'], strict_slashes=False)
 @app_views.route('/states/<state_id>', methods=['GET', 'DELETE', 'PUT'],
                  strict_slashes=False)
@@ -17,7 +18,7 @@ def states_get(state_id=None):
     """
     # GET REQUESTS
     if request.method == 'GET':
-        if not state_id: # if no state id specified, return all
+        if not state_id:
             states = storage.all(State)
             return jsonify([obj.to_dict() for obj in states.values()])
         else:
