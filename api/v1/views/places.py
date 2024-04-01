@@ -8,6 +8,8 @@ from models import storage
 from models.city import City
 from models.user import User
 from models.place import Place
+from models.state import State
+from models.amenity import Amenity
 
 
 @app_views.route('/cities/<city_id>/places', methods=['GET', 'POST'],
@@ -104,3 +106,38 @@ def place_methods(place_id=None):
 
     else:
         abort(501)
+
+@app_views.route('/places_search', methods=['POST'], strict_slashes=False)
+def places_search():
+    """Retrieves all Place objects based on the search criteria."""
+    if not request.is_json:
+        abort(400, 'Not a JSON')
+
+    search_criteria = request.get_json()
+    places = storage.all(Place)
+    filtered_places = []
+
+    if not any(search_criteria.values()):
+        return jsonify([place.to_dict() for place in places.values()])
+
+    if 'states' in search_criteria and search_criteria['states']:
+        state_ids = search_criteria['states']
+        for state_id in state_ids:
+            state = storage.get(State, state_id)
+            if state:
+                for city in state.cities:
+                    filtered_places.extend([place for place in city.places if place not in filtered_places])
+
+    if 'cities' in search_criteria and search_criteria['cities']:
+        city_ids = search_criteria['cities']
+        for city_id in city_ids:
+            city = storage.get(City, city_id)
+            if city:
+                filtered_places.extend([place for place in city.places if place not in filtered_places])
+
+  
+    if 'amenities' in search_criteria and search_criteria['amenities']:
+        amenity_ids = search_criteria['amenities']
+        filtered_places = [place for place in filtered_places if all(amenity in place.amenities for amenity in amenity_ids)]
+
+    return jsonify([place.to_dict() for place in filtered_places])
