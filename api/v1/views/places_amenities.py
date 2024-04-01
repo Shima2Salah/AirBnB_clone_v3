@@ -56,7 +56,7 @@ def place_amenity_requests(place_id=None, amenity_id=None):
         if amenity in place.amenities:
             return jsonify(amenity.to_dict()), 200
 
-        if mode == 'db': # DBStorage mode
+        if mode == 'db':
             place.amenities.append(amenity)
 
         else:
