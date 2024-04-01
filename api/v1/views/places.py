@@ -10,7 +10,8 @@ from models.user import User
 from models.place import Place
 
 
-@app_views.route('/cities/<city_id>/places', methods=['GET', 'POST'], strict_slashes=False)
+@app_views.route('/cities/<city_id>/places', methods=['GET', 'POST'],
+                 strict_slashes=False)
 def places_by_city_requests(city_id):
     """Perform API requests of places by city
     """
