@@ -22,9 +22,7 @@ def place_amenity_requests(place_id=None, amenity_id=None):
     """
     mode = getenv('HBNB_TYPE_STORAGE')
 
-    # GET REQUESTS
     if request.method == 'GET':
-        # fetch place object
         place = storage.get(Place, place_id)
         if place is None:
             abort(404)
@@ -32,9 +30,7 @@ def place_amenity_requests(place_id=None, amenity_id=None):
         amenity_list = [amenity.to_dict() for amenity in place.amenities]
         return jsonify(amenity_list)
 
-    # DELETE REQUESTS
     elif request.method == 'DELETE':
-        # validate place and amenity objects
         place = storage.get(Place, place_id)
         amenity = storage.get(Amenity, amenity_id)
         if place is None or amenity is None:
@@ -43,7 +39,7 @@ def place_amenity_requests(place_id=None, amenity_id=None):
         if amenity not in place.amenities:
             abort(404)
 
-        if mode != 'db': # FileStorage mode
+        if mode != 'db':
             place.amenity_ids.remove('Amenity.' + amenity_id)
 
         storage.delete(amenity)
@@ -51,28 +47,23 @@ def place_amenity_requests(place_id=None, amenity_id=None):
 
         return jsonify({}), 200
 
-    # POST REQUESTS
     elif request.method == 'POST':
-        # link amenity to place
         place = storage.get(Place, place_id)
         amenity = storage.get(Amenity, amenity_id)
         if place is None or amenity is None:
             abort(404)
 
-        # if relationship already exists
         if amenity in place.amenities:
             return jsonify(amenity.to_dict()), 200
 
         if mode == 'db': # DBStorage mode
             place.amenities.append(amenity)
 
-        else: # FileStorage mode
+        else:
             place.amenity_ids.append('Amenity.' + amenity_id)
 
         storage.save()
         return jsonify(amenity.to_dict()), 201
 
-    # UNSUPPORTED REQUESTS
     else:
         abort(501)
-
