@@ -17,54 +17,46 @@ def users_method(user_id=None):
     """
     users = storage.all(User)
 
-    # GET REQUESTS
     if request.method == 'GET':
-        if not user_id: # if no user id specified, return all
+        if not user_id:
             return jsonify([obj.to_dict() for obj in users.values()])
 
         key = 'User.' + user_id
-        try: # if obj exists in dictionary, convert from obj -> dict -> json
+        try:
             return jsonify(users[key].to_dict())
         except KeyError:
             abort(404) # if User of user_id does not exist
 
-    # DELETE REQUESTS
     elif request.method == 'DELETE':
         try:
             key = 'User.' + user_id
             storage.delete(users[key])
             storage.save()
             return jsonify({}), 200
-        except:
+        except KeyError:
             abort(404)
 
-    # POST REQUESTS
     elif request.method == 'POST':
-        # convert JSON request to dict
         if request.is_json:
             body_request = request.get_json()
         else:
             abort(400, 'Not a JSON')
 
-        # check for missing attributes
         if 'email' not in body_request:
             abort(400, 'Missing email')
         elif 'password' not in body_request:
             abort(400, 'Missing password')
-        # instantiate, store, and return new User object
         else:
             new_user = User(**body_request)
             storage.new(new_user)
             storage.save()
             return jsonify(new_user.to_dict()), 201
 
-    # PUT REQUESTS
     elif request.method == 'PUT':
         key = 'User.' + user_id
         try:
             user = users[key]
 
-            # convert JSON request to dict
             if request.is_json:
                 body_request = request.get_json()
             else:
@@ -81,7 +73,5 @@ def users_method(user_id=None):
         except KeyError:
             abort(404)
 
-    # UNSUPPORTED REQUESTS
     else:
         abort(501)
-
