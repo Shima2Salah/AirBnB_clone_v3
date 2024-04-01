@@ -1,6 +1,6 @@
 #!/usr/bin/python3
 """
-View to handle API actions related to State objects
+State Api view
 """
 
 from api.v1.views import app_views
@@ -13,21 +13,17 @@ from models.state import State
 @app_views.route('/states/<state_id>', methods=['GET', 'DELETE', 'PUT'],
                  strict_slashes=False)
 def states_get(state_id=None):
-    """Manipulate State object by state_id, or all objects if
-    state_id is None
-    """
-    # GET REQUESTS
+    """to manage all methods on states"""
     if request.method == 'GET':
         if not state_id:
             states = storage.all(State)
-            return jsonify([obj.to_dict() for obj in states.values()])
+            return jsonify([st.to_dict() for st in states.values()])
         else:
             state = storage.get(State, state_id)
             if state is None:
                 abort(404)
             return jsonify(state.to_dict())
 
-    # DELETE REQUESTS
     elif request.method == 'DELETE':
         state = storage.get(State, state_id)
         if state is None:
@@ -36,7 +32,6 @@ def states_get(state_id=None):
         storage.save()
         return jsonify({}), 200
 
-    # POST REQUESTS
     elif request.method == 'POST':
         if not request.is_json:
             abort(400, 'Not a JSON')
@@ -48,7 +43,6 @@ def states_get(state_id=None):
         storage.save()
         return jsonify(new_state.to_dict()), 201
 
-    # PUT REQUESTS
     elif request.method == 'PUT':
         state = storage.get(State, state_id)
         if state is None:
@@ -62,6 +56,5 @@ def states_get(state_id=None):
         storage.save()
         return jsonify(state.to_dict()), 200
 
-    # UNSUPPORTED REQUESTS
     else:
         abort(501)
