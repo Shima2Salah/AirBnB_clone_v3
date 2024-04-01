@@ -1,82 +1,61 @@
 #!/usr/bin/python3
-"""View to handle API actions related to State objects
+"""
+for states API
 """
 
 from api.v1.views import app_views
-from flask import jsonify, abort, request
+from flask import jsonify, request, abort
 from models import storage
+from models.state import State
 
 
 @app_views.route('/states', methods=['GET', 'POST'], strict_slashes=False)
-@app_views.route('/states/<state_id>', methods=['GET', 'DELETE', 'PUT'],
-                 strict_slashes=False)
-def states_get(state_id=None):
-    """Manipulate State object by state_id, or all objects if
-    state_id is None
-    """
-    from models.state import State
-    states = storage.all(State)
-
-    # GET REQUESTS
+@app_views.route('/states/<state_id>', methods=['GET', 'DELETE', 'PUT'], strict_slashes=False)
+def states(state_id=None):
+    """Handles HTTP requests for State objects"""
     if request.method == 'GET':
-        if not state_id:  # if no, state id specified, return all
-            return jsonify([obj.to_dict() for obj in states.values()])
+        if state_id:
+            state = storage.get(State, state_id)
+            if state:
+                return jsonify(state.to_dict())
+            else:
+                abort(404)
+        else:
+            states = storage.all(State).values()
+            return jsonify([state.to_dict() for state in states])
 
-        key = 'State.' + state_id
-        try:  # if obj exists in dictionary, convert from obj -> dict -> json
-            return jsonify(states[key].to_dict())
-        except KeyError:
-            abort(404)  # if State of state_id does not exist
-
-    # DELETE REQUESTS
     elif request.method == 'DELETE':
-        try:
-            key = 'State.' + state_id
-            storage.delete(states[key])
+        state = storage.get(State, state_id)
+        if state:
+            storage.delete(state)
             storage.save()
             return jsonify({}), 200
-        except:
-            abort(404)
-
-    # POST REQUESTS
-    elif request.method == 'POST':
-        # convert JSON request to dict
-        if request.is_json:
-            body_request = request.get_json()
         else:
-            abort(400, 'Not a JSON')
-
-        # instantiate, store, and return new State object
-        if 'name' in body_request:
-            new_state = State(**body_request)
-            storage.new(new_state)
-            storage.save()
-            return jsonify(new_state.to_dict()), 201
-        else:  # if request does not contain required attribute
-            abort(400, 'Missing name')
-
-    # PUT REQUESTS
-    elif request.method == 'PUT':
-        key = 'State.' + state_id
-        try:
-            state = states[key]
-
-            # convert JSON request to dict
-            if request.is_json:
-                body_request = request.get_json()
-            else:
-                abort(400, 'Not a JSON')
-
-            for key, val in body_request.items():
-                if key != 'id' and key != 'created_at' and key != 'updated_at':
-                    setattr(state, key, val)
-
-            storage.save()
-            return jsonify(state.to_dict()), 200
-
-        except KeyError:
             abort(404)
 
-    # UNSUPPORTED REQUESTS
+    elif request.method == 'POST':
+        if not request.json:
+            return jsonify({"error": "Not a JSON"}), 400
+        if 'name' not in request.json:
+            return jsonify({"error": "Missing name"}), 400
+        data = request.json
+        new_state = State(**data)
+        new_state.save()
+        return jsonify(new_state.to_dict()), 201
+
+    elif request.method == 'PUT':
+        state = storage.get(State, state_id)
+        if state:
+            data = request.json
+            if not data:
+                return jsonify({"error": "Not a JSON"}), 400
+            for key, value in data.items():
+                if key not in ['id', 'created_at', 'updated_at']:
+                    setattr(state, key, value)
+            state.save()
+            return jsonify(state.to_dict()), 200
+        else:
+            abort(404)
+
     else:
         abort(501)
