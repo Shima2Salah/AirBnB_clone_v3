@@ -57,7 +57,7 @@ def city_methods(state_id=None, city_id=None):
             storage.delete(cities[city_key])
             storage.save()
             return jsonify({}), 200
-        except:
+        except KeyError:
             abort(404)
 
     elif request.method == "PUT" and city_id:
