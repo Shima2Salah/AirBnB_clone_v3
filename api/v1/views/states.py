@@ -1,61 +1,66 @@
 #!/usr/bin/python3
 """
-for states API
+View to handle API actions related to State objects
 """
 
 from api.v1.views import app_views
-from flask import jsonify, request, abort
+from flask import jsonify, abort, request
 from models import storage
 from models.state import State
 
-
 @app_views.route('/states', methods=['GET', 'POST'], strict_slashes=False)
-@app_views.route('/states/<state_id>', methods=['GET', 'DELETE', 'PUT'], strict_slashes=False)
-def states(state_id=None):
-    """Handles HTTP requests for State objects"""
+@app_views.route('/states/<state_id>', methods=['GET', 'DELETE', 'PUT'],
+                 strict_slashes=False)
+def states_get(state_id=None):
+    """Manipulate State object by state_id, or all objects if
+    state_id is None
+    """
+    # GET REQUESTS
     if request.method == 'GET':
-        if state_id:
-            state = storage.get(State, state_id)
-            if state:
-                return jsonify(state.to_dict())
-            else:
-                abort(404)
+        if not state_id: # if no state id specified, return all
+            states = storage.all(State)
+            return jsonify([obj.to_dict() for obj in states.values()])
         else:
-            states = storage.all(State).values()
-            return jsonify([state.to_dict() for state in states])
+            state = storage.get(State, state_id)
+            if state is None:
+                abort(404)
+            return jsonify(state.to_dict())
 
+    # DELETE REQUESTS
     elif request.method == 'DELETE':
         state = storage.get(State, state_id)
-        if state:
-            storage.delete(state)
-            storage.save()
-            return jsonify({}), 200
-        else:
+        if state is None:
             abort(404)
+        storage.delete(state)
+        storage.save()
+        return jsonify({}), 200
 
+    # POST REQUESTS
     elif request.method == 'POST':
-        if not request.json:
-            return jsonify({"error": "Not a JSON"}), 400
-        if 'name' not in request.json:
-            return jsonify({"error": "Missing name"}), 400
-        data = request.json
-        new_state = State(**data)
-        new_state.save()
+        if not request.is_json:
+            abort(400, 'Not a JSON')
+        body_request = request.get_json()
+        if 'name' not in body_request:
+            abort(400, 'Missing name')
+        new_state = State(**body_request)
+        storage.new(new_state)
+        storage.save()
         return jsonify(new_state.to_dict()), 201
 
+    # PUT REQUESTS
     elif request.method == 'PUT':
         state = storage.get(State, state_id)
-        if state:
-            data = request.json
-            if not data:
-                return jsonify({"error": "Not a JSON"}), 400
-            for key, value in data.items():
-                if key not in ['id', 'created_at', 'updated_at']:
-                    setattr(state, key, value)
-            state.save()
-            return jsonify(state.to_dict()), 200
-        else:
+        if state is None:
             abort(404)
+        if not request.is_json:
+            abort(400, 'Not a JSON')
+        body_request = request.get_json()
+        for key, val in body_request.items():
+            if key not in ['id', 'created_at', 'updated_at']:
+                setattr(state, key, val)
+        storage.save()
+        return jsonify(state.to_dict()), 200
 
+    # UNSUPPORTED REQUESTS
     else:
         abort(501)
